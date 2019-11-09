@@ -4,6 +4,7 @@ import torch.nn as nn
 class Encoder(nn.Module):
 
     def __init__(self):
+        super(Encoder,self).__init__()
         self.model = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, stride=2, padding=1), 
             nn.ReLU(inplace=True),
