@@ -62,12 +62,40 @@ def evaluation_pipeline(col, number_of_images):
     }
 
 
-def print_log(content, run_id):
-    with open('output_{}.txt'.format(run_id), mode='a') as f:
-        f.write('[{}] {}\n'.format(time.strftime("%c"), content))
-
-
 def metrics_system(run_id, sess):
     # Merge all the summaries and set up the writers
     train_writer = tf.summary.FileWriter(join(dir_metrics, run_id), sess.graph)
     return train_writer
+
+def plot_evaluation(res, run_id, epoch):
+    maybe_create_folder(join(dir_root, 'images', run_id))
+    for k in range(len(res['imgs_l'])):
+        img_gray = l_to_rgb(res['imgs_l'][k][:, :, 0])
+        img_output = lab_to_rgb(res['imgs_l'][k][:, :, 0],
+                                res['imgs_ab'][k])
+        img_true = lab_to_rgb(res['imgs_l'][k][:, :, 0],
+                              res['imgs_true_ab'][k])
+        top_5 = np.argsort(res['imgs_emb'][k])[-5:]
+        try:
+            top_5 = ' / '.join(labels_to_categories[i] for i in top_5)
+        except:
+            ptop_5 = str(top_5)
+
+        plt.subplot(1, 3, 1)
+        plt.imshow(img_gray)
+        plt.title('Input (grayscale)')
+        plt.axis('off')
+        plt.subplot(1, 3, 2)
+        plt.imshow(img_output)
+        plt.title('Network output')
+        plt.axis('off')
+        plt.subplot(1, 3, 3)
+        plt.imshow(img_true)
+        plt.title('Target (original)')
+        plt.axis('off')
+        plt.suptitle(top_5, fontsize=7)
+
+        plt.savefig(join(
+            dir_root, 'images', run_id, '{}_{}.png'.format(epoch, k)))
+        plt.clf()
+        plt.close()

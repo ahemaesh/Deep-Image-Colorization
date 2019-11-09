@@ -16,8 +16,8 @@ learning_rate = 0.001
 batches = total_train_images // batch_size
 
 # START
-sess = tf.Session()
-K.set_session(sess)
+# sess = tf.Session()
+# K.set_session(sess)
 
 # Build the network and the various operations
 col = Colorization(256)
@@ -26,14 +26,14 @@ evaluations_ops = evaluation_pipeline(col, val_number_of_images)
 summary_writer = metrics_system(run_id, sess)
 saver, checkpoint_paths, latest_checkpoint = checkpointing_system(run_id)
 
-with sess.as_default():
-    # Initialize
-    sess.run(tf.global_variables_initializer())
-    sess.run(tf.local_variables_initializer())
+# with sess.as_default():
+#     # Initialize
+#     sess.run(tf.global_variables_initializer())
+#     sess.run(tf.local_variables_initializer())
 
-    # Coordinate the loading of image files.
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=coord)
+#     # Coordinate the loading of image files.
+#     coord = tf.train.Coordinator()
+#     threads = tf.train.start_queue_runners(coord=coord)
 
     # Restore
     if latest_checkpoint is not None:
