@@ -7,6 +7,7 @@ import time
 import numpy as np 
 import torch
 import torch.nn as nn
+import torchvision.models as models
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 from colorization import Colorization
 
@@ -27,12 +28,8 @@ class Configuration:
 #****************************************#
 class HyperParameters:
     epochs = 1
-    batch_size = 100
+    batch_size = 32
     learning_rate = 0.001
-
-    val_number_of_images = 10
-    total_train_images = 130 * 500
-    batches = int(total_train_images/batch_size)
 
 config = Configuration()
 hparams = HyperParameters()
@@ -41,10 +38,9 @@ hparams = HyperParameters()
 #****************************************#
 #***       Architecture Pipeline      ***#
 #****************************************#
-model = Colorization(256)  
-# model.encoder.apply(init_weights)
-# model.decoder.apply(init_weights)
-# model.fusion.apply(init_weights)
+model = Colorization(256).to(config.device) 
+inception_model = models.inception_v3(pretrained=True).to(config.device)
+inception_model.eval()
 loss_criterion = torch.nn.MSELoss(reduction='mean').to(config.device)
 optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate, weight_decay=1e-6)
 
@@ -53,50 +49,38 @@ optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate, weight_decay=1
 #***  Training & Validation Pipeline  ***#
 #****************************************#
 
-# To Do : Bhumi: Load the data from a class
-#train_dataset = 
-#val_dataset = 
-
-train_loader = DataLoader(train_dataset, shuffle=True, batch_size=hparams.batch_size)
-val_loader = DataLoader(val_dataset, shuffle=False, batch_size=hparams.batch_size)
-
-
-evaluations_ops = evaluation_pipeline(col, hparams.val_number_of_images)
+train_dataset = torchvision.datasets.ImageFolder(root='data/train', 
+                                               transform=torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),torchvision.transforms.Resize((224,224),interpolation=3),torchvision.transforms.ToTensor()]))
+train_dataset = Dataset('data/train')
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=hparams.batch_size, shuffle=True, num_workers=8)
+validation_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=hparams.batch_size, shuffle=True, num_workers=8)
 
 
 for epoch in range(epochs):
-    print('Starting epoch:',epoch, 'total images', hparams.total_train_images)
+    print('Starting epoch:',epoch)
     # Training step
     loop_start = time.time()
-    for batch in range(batches):
-
+    for idx,(img_l,img_ab) in enumerate(train_dataloader):
         optimizer.zero_grad()
-
+        img_embs = inception_model(img_l)
+        output_ab = model(img_l,img_embs)
         
-        feature, outputs = model(feats,evalMode=False)
-
-        loss = criterion(outputs, labels.long())
+        loss = criterion(output_ab, img_ab)
         loss.backward()
         
         scheduler.step()
         optimizer.step()
-        # by doing so, weight_cent would not impact on the learning of centers
-        for param in criterion_closs.parameters():
-            param.grad.data *= (1. / hp.closs_weight)
-        optimizer_closs.step()
         
         avg_loss += loss.item()
+
         if batch%config.point_batches==0: 
             loop_end = time.time()   
             print('Batch:' batch ,'of', batches, '| Processing time for',config.point_batches,'batches:',loop_end-loop_start)
             loop_start = time.time()
 
-        # res = sess.run(opt_operations)
-        # global_step = res['global_step']
-        # print_log('Cost: {} Global step: {}'
-        #           .format(res['cost'], global_step), run_id)
-        # summary_writer.add_summary(res['summary'], global_step)
 
+    for idx,(img_l,img_ab) in enumerate(validation_dataloader):
+        model.eval()
 
     # Save the variables to disk
     checkpoint = {'model': model,'model_state_dict': model.state_dict(),\
@@ -106,9 +90,3 @@ for epoch in range(epochs):
     torch.save(checkpoint, config.model_file_name)
     print("Model saved at:",os.getcwd(),'/',config.model_file_name)
     print('')
-
-
-    # Evaluation step on validation
-    res = sess.run(evaluations_ops)
-    summary_writer.add_summary(res['summary'], global_step)
-    plot_evaluation(res, run_id, epoch)
