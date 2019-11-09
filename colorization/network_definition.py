@@ -1,9 +1,9 @@
 #****************************************#
 #***          Import Modules          ***#
 #****************************************#
-from colorization.encoder import Encoder
-from colorization.decoder import Decoder
-from colorization.fusion_layer import FusionLayer
+from encoder import Encoder
+from decoder import Decoder
+from fusion_layer import FusionLayer
 import torch.nn as nn
 
 

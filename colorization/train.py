@@ -7,9 +7,11 @@ import time
 import numpy as np 
 import torch
 import torch.nn as nn
+import torchvision
 import torchvision.models as models
-from torch.utils.data import Dataset, DataLoader, TensorDataset
-from colorization import Colorization
+from torch.utils.data import Dataset, DataLoader
+from network_definition import Colorization
+import ipdb
 
 
 #****************************************#
@@ -51,16 +53,13 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, index):
         self.rgb = io.imread(os.path.join(self.root_dir,self.files[index]))
-        
         rgb_encoder = resize(self.rgb, (225, 225),anti_aliasing=True)
         rgb_inception = resize(self.rgb, (300, 300),anti_aliasing=True)
 
         self.lab_encoder = color.rgb2lab(rgb_encoder)
-
         l_encoder = self.lab_encoder[:,:,0]
         l_encoder = np.stack((l_encoder,)*3,axis = -1).transpose(2,0,1)
         l_encoder = torchvision.transforms.ToTensor()(l_encoder)
-
         ab_encoder = self.lab_encoder[:,:,1:3].transpose(2,0,1)
         ab_encoder = torchvision.transforms.ToTensor()(ab_encoder)
 
@@ -69,23 +68,24 @@ class CustomDataset(Dataset):
         l_inception = np.stack((l_inception,)*3,axis = -1).transpose(2,0,1)
         l_inception = torchvision.transforms.ToTensor()(l_inception)
 
-        return l_encoder, ab_encoder, l_inception
+        return l_encoder.to(config.device), ab_encoder.to(config.device), l_inception.to(config.device)
 
     def show_rgb(self, index):
         print("RGB image size:", self.rgb.shape)
         io.imshow(self.rgb)
 
     def show_lab_encoder(self, index):
-        print("Lab image 1 size:", self.lab_encoder.shape)
+        print("Encoder Lab image size:", self.lab_encoder.shape)
         io.imshow(self.lab_encoder)
 
-    def show_lab2(self, index):
-        print("Lab image 2 size:", self.lab2.shape)
-        io.imshow(self.lab2)
+    def show_lab_inception(self, index):
+        print("Inception Lab image size:", self.lab_inception.shape)
+        io.imshow(self.lab_inception)
 
 #****************************************#
 #***       Architecture Pipeline      ***#
 #****************************************#
+ipdb.set_trace()
 model = Colorization(256).to(config.device) 
 inception_model = models.inception_v3(pretrained=True).to(config.device)
 inception_model.eval()
@@ -128,7 +128,7 @@ for epoch in range(epochs):
 
         if idx%config.point_batches==0: 
             loop_end = time.time()   
-            print('Batch:' idx, '| Processing time for',config.point_batches,':',loop_end-loop_start)
+            print('Batch:',idx, '| Processing time for',config.point_batches,':',loop_end-loop_start)
             loop_start = time.time()
 
     #******     Validation     ******       
@@ -143,7 +143,7 @@ for epoch in range(epochs):
 
         if idx%config.point_batches==0: 
             loop_end = time.time()   
-            print('Batch:' idx, '| Processing time for',config.point_batches,':',loop_end-loop_start)
+            print('Batch:', idx, '| Processing time for',config.point_batches,':',loop_end-loop_start)
             loop_start = time.time()
 
     validation_loss = avg_loss/len(validation_dataloader) 

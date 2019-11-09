@@ -19,7 +19,7 @@ print(inception)
 import os
 import numpy as np
 import math
-from PIL import Image
+# from PIL import Image
 
 import torch
 import torchvision
@@ -27,8 +27,8 @@ import torch.nn as nn
 import time
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.image as mpimg
-from PIL import Image
+# import matplotlib.image as mpimg
+# from PIL import Image
 
 from google.colab import files
 files.upload()
