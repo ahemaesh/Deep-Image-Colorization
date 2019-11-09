@@ -3,9 +3,10 @@ import torch.nn as nn
 
 class Decoder(nn.Module):
 
-    def __init__(self):
+    # Avinash -> Atulya, Should take the depth_after_fusion as a parameter? 
+    def __init__(self, input_depth):
         self.model = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=input_depth, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
             nn.Upsample(scale_factor=2.0),
             nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1),
@@ -22,4 +23,6 @@ class Decoder(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+
         
