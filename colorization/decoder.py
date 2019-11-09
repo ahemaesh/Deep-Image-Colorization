@@ -24,8 +24,6 @@ class Decoder(nn.Module):
         return self.model(x)
 
 
-    def init_weights():
-
 
 
         

@@ -42,7 +42,9 @@ hparams = HyperParameters()
 #***       Architecture Pipeline      ***#
 #****************************************#
 model = Colorization(256)  
-model.encoder.apply(init_weights)
+# model.encoder.apply(init_weights)
+# model.decoder.apply(init_weights)
+# model.fusion.apply(init_weights)
 loss_criterion = torch.nn.MSELoss(reduction='mean').to(config.device)
 optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate, weight_decay=1e-6)
 
