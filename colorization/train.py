@@ -13,7 +13,9 @@ from torch.utils.data import Dataset, DataLoader
 from network_definition import Colorization
 from skimage import io, color
 from skimage.transform import resize
+import cv2
 
+import ipdb
 
 #****************************************#
 #***           Configuration          ***#
@@ -78,17 +80,20 @@ class CustomDataset(Dataset):
     def show_rgb(self, index):
         self.__getitem__(index)
         print("RGB image size:", self.rgb.shape)
-        io.imshow(self.rgb)
+        cv2.imshow("RGB",self.rgb)
+        cv2.waitKey(0)
 
     def show_lab_encoder(self, index):
         self.__getitem__(index)
         print("Encoder Lab image size:", self.lab_encoder.shape)
-        io.imshow(self.lab_encoder)
+        cv2.imshow("Lab Encoder",self.lab_encoder)
+        cv2.waitKey(0)
 
     def show_lab_inception(self, index):
         self.__getitem__(index)
         print("Inception Lab image size:", self.lab_inception.shape)
-        io.imshow(self.lab_inception)
+        cv2.imshow("Lab Inception",self.lab_encoder)
+        cv2.waitKey(0)
 
 
 #****************************************#
@@ -128,6 +133,7 @@ for epoch in range(hparams.epochs):
         model.train()
         optimizer.zero_grad()
         img_embs = inception_model(img_l_inception.float())
+        print(img_embs.size())
         output_ab = model(img_l_encoder,img_embs)
         
         loss = criterion(output_ab, img_ab_encoder)
