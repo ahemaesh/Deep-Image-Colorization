@@ -15,7 +15,6 @@ from skimage import io, color
 from skimage.transform import resize
 import cv2
 
-import ipdb
 
 #****************************************#
 #***           Configuration          ***#
@@ -35,7 +34,7 @@ class Configuration:
 
 class HyperParameters:
     epochs = 1
-    batch_size = 2
+    batch_size = 4
     learning_rate = 0.001
     num_workers = 4
     learning_rate_decay = 0.72
@@ -60,7 +59,7 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, index):
         self.rgb = io.imread(os.path.join(self.root_dir,self.files[index]))
-        rgb_encoder = resize(self.rgb, (225, 225),anti_aliasing=True)
+        rgb_encoder = resize(self.rgb, (224, 224),anti_aliasing=True)
         rgb_inception = resize(self.rgb, (300, 300),anti_aliasing=True)
 
         self.lab_encoder = color.rgb2lab(rgb_encoder)
@@ -99,7 +98,7 @@ class CustomDataset(Dataset):
 #****************************************#
 #***       Architecture Pipeline      ***#
 #****************************************#
-# ipdb.set_trace()
+
 model = Colorization(256).to(config.device) 
 inception_model = models.inception_v3(pretrained=True).float().to(config.device)
 inception_model = inception_model.float()
@@ -133,7 +132,6 @@ for epoch in range(hparams.epochs):
         model.train()
         optimizer.zero_grad()
         img_embs = inception_model(img_l_inception.float())
-        print(img_embs.size())
         output_ab = model(img_l_encoder,img_embs)
         
         loss = criterion(output_ab, img_ab_encoder)
