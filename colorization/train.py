@@ -45,7 +45,7 @@ print('Device:',config.device)
 
 
 #****************************************#
-#***         Hyper Parameters         ***#
+#***        Custom Dataloader         ***#
 #****************************************#
 
 class CustomDataset(Dataset):
@@ -119,9 +119,6 @@ test_dataset = CustomDataset('data/test')
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=hparams.batch_size, shuffle=True, num_workers=hparams.num_workers)
 validation_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=hparams.batch_size, shuffle=False, num_workers=hparams.num_workers)
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=hparams.batch_size, shuffle=False, num_workers=hparams.num_workers)
-
-print(model)
-print(abc)
 
 for epoch in range(hparams.epochs):
     print('Starting epoch:',epoch+1)
