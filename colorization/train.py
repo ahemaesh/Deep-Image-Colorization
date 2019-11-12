@@ -120,6 +120,8 @@ train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=hparams
 validation_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=hparams.batch_size, shuffle=False, num_workers=hparams.num_workers)
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=hparams.batch_size, shuffle=False, num_workers=hparams.num_workers)
 
+print(model)
+print(abc)
 
 for epoch in range(hparams.epochs):
     print('Starting epoch:',epoch+1)
@@ -133,12 +135,13 @@ for epoch in range(hparams.epochs):
         optimizer.zero_grad()
         img_embs = inception_model(img_l_inception.float())
         output_ab = model(img_l_encoder,img_embs)
-        
-        loss = criterion(output_ab, img_ab_encoder)
+        # print(output_ab.dtype,img_ab_encoder.dtype)
+        loss = loss_criterion(output_ab, img_ab_encoder.float())
         loss.backward()
         
-        scheduler.step()
+        
         optimizer.step()
+        scheduler.step()
         
         avg_loss += loss.item()
 
@@ -157,7 +160,7 @@ for epoch in range(hparams.epochs):
         model.eval()
         img_embs = inception_model(img_l_inception)
         output_ab = model(img_l_encoder,img_embs)
-        loss = criterion(output_ab, img_ab_encoder)
+        loss = loss_criterion(output_ab, img_ab_encoder)
         avg_loss += loss.item()
 
         if idx%config.point_batches==0: 
