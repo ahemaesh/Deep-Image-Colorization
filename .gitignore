@@ -4,6 +4,7 @@ data/
 .vscode/
 .DS_Store
 runs/
+.ipynb_checkpoints/
 
 #Files
 
