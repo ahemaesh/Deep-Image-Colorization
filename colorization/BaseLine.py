@@ -25,8 +25,8 @@ import cv2
 
 class Configuration:
     model_file_name = 'checkpoint.pt15'
-    load_model_to_train = False
-    load_model_to_test = True
+    load_model_to_train = True
+    load_model_to_test = False
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 500
 
@@ -36,9 +36,9 @@ class Configuration:
 class HyperParameters:
     epochs = 15
     batch_size = 32
-    learning_rate = 0.001
+    learning_rate = 0.0001
     num_workers = 16
-    learning_rate_decay = 0.5
+    learning_rate_decay = 0.1
 
 
 config = Configuration()
@@ -63,7 +63,6 @@ class CustomDataset(Dataset):
             #*** Read the image from file ***
             self.rgb_img = cv2.imread(os.path.join(self.root_dir,self.files[index]))
             
-
             if self.rgb_img is None:
                 raise Exception
 
