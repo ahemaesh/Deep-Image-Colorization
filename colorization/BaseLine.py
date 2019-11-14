@@ -387,9 +387,11 @@ if not config.load_model_to_test:
         print('Validation Loss:', val_loss,'| Processed in ',str(time.time()-loop_start)+'s')
 
         #*** Save the Model to disk ***
-        checkpoint = {'model': model,'model_state_dict': model.state_dict(), 'optimizer' : optimizer,'optimizer_state_dict' : optimizer.state_dict(),                      'train_loss':train_loss, 'val_loss':val_loss}
-        torch.save(checkpoint, config.model_file_name+str(epoch+1))
-        print("Model saved at:",os.getcwd()+'/'+str(config.model_file_name)+str(epoch+1))
+        checkpoint = {'model': model,'model_state_dict': model.state_dict(),\
+                      'optimizer' : optimizer,'optimizer_state_dict' : optimizer.state_dict(), \
+                      'train_loss':train_loss, 'val_loss':val_loss}
+        torch.save(checkpoint, config.model_file_name+'.'+str(epoch+1))
+        print("Model saved at:",os.getcwd()+'/'+str(config.model_file_name)+'.'+str(epoch+1))
 
 
 # ### Inference
