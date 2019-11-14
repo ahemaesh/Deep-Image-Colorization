@@ -24,9 +24,9 @@ import cv2
 # ### Configuration
 
 class Configuration:
-    model_file_name = 'checkpoint.pt'
+    model_file_name = 'checkpoint.pt15'
     load_model_to_train = False
-    load_model_to_test = False
+    load_model_to_test = True
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 500
 
@@ -61,7 +61,11 @@ class CustomDataset(Dataset):
     def __getitem__(self, index):
         try:
             #*** Read the image from file ***
-            self.rgb_img = cv2.imread(os.path.join(self.root_dir,self.files[index])).astype(np.float32) 
+            self.rgb_img = cv2.imread(os.path.join(self.root_dir,self.files[index]))
+            
+            assert self.rgb_img!=None,raise Exception
+
+            self.rgb_img = self.rgb_img.astype(np.float32) 
             self.rgb_img /= 255.0 
             
             #*** Resize the color image to pass to encoder ***
@@ -352,7 +356,7 @@ if not config.load_model_to_test:
         #*** Print Training Data Stats ***
         train_loss = avg_loss/len(train_dataloader)*hparams.batch_size
         writer.add_scalar('Loss/train', train_loss, epoch)
-        print('Training Loss:',train_loss,'| Processed in ',time.time()-main_start,'s')
+        print('Training Loss:',train_loss,'| Processed in ',time.time()-main_start+'s')
 
         #*** Validation Step ***       
         avg_loss = 0.0
@@ -379,12 +383,12 @@ if not config.load_model_to_test:
 
         val_loss = avg_loss/len(validation_dataloader)*hparams.batch_size
         writer.add_scalar('Loss/validation', val_loss, epoch)
-        print('Validation Loss:', val_loss,'| Processed in ',time.time()-loop_start,'s')
+        print('Validation Loss:', val_loss,'| Processed in ',time.time()-loop_start+'s')
 
         #*** Save the Model to disk ***
         checkpoint = {'model': model,'model_state_dict': model.state_dict(), 'optimizer' : optimizer,'optimizer_state_dict' : optimizer.state_dict(),                      'train_loss':train_loss, 'val_loss':val_loss}
-        torch.save(checkpoint, config.model_file_name+str(idx))
-        print("Model saved at:",os.getcwd(),'/',config.model_file_name)
+        torch.save(checkpoint, config.model_file_name+str(epoch+1))
+        print("Model saved at:",os.getcwd()+'/'+str(config.model_file_name)+str(epoch+1))
 
 
 # ### Inference
@@ -457,6 +461,6 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         
 test_loss = avg_loss/len(test_dataloader)
 writer.add_scalar('Loss/test', test_loss, epoch)
-print('Test Loss:',avg_loss/len(test_dataloader),'| Processed in ',time.time()-loop_start,'s')
+print('Test Loss:',avg_loss/len(test_dataloader),'| Processed in ',time.time()-loop_start+'s')
 writer.close()
 
