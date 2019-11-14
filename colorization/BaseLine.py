@@ -42,7 +42,7 @@ import cv2
 class Configuration:
     model_file_name = 'checkpoint.pt'
     load_model_to_train = False
-    load_model_to_test = True
+    load_model_to_test = False
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 100
 
@@ -81,7 +81,7 @@ class CustomDataset(Dataset):
         print('File[0]:',self.files[0],'| Total Files:', len(self.files), '| Process:',self.process_type,)
 
     def __len__(self):
-        return len(self.files)
+        return 1024#len(self.files)
 
     def __getitem__(self, index):
         try:
