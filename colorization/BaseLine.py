@@ -24,9 +24,9 @@ import cv2
 # ### Configuration
 
 class Configuration:
-    model_file_name = 'checkpoint.pt15'
-    load_model_to_train = True
-    load_model_to_test = False
+    model_file_name = 'pretrained_models/checkpoint'
+    load_model_to_train = False
+    load_model_to_test = True
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 500
 
