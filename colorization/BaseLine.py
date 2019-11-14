@@ -44,7 +44,7 @@ from skimage.transform import resize
 class Configuration:
     model_file_name = 'checkpoint.pt'
     load_model_to_train = False
-    load_model_to_test = True
+    load_model_to_test = False
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 100
 
@@ -91,10 +91,10 @@ class CustomDataset(Dataset):
             self.rgb_img = io.imread(os.path.join(self.root_dir,self.files[index]),plugin='matplotlib') 
             
             #*** Resize the color image to pass to encoder ***
-            rgb_encoder_img = resize(self.rgb_img, (224, 224))
+            rgb_encoder_img = resize(self.rgb_img, (224, 224), mode='constant')
             
             #*** Resize the color image to pass to decoder ***
-            rgb_inception_img = resize(self.rgb_img, (300, 300))
+            rgb_inception_img = resize(self.rgb_img, (300, 300), mode='constant')
             
             ''' Encoder Images '''
             #*** Convert the encoder color image to normalized lab space ***
