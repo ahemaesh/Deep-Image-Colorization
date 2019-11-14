@@ -43,7 +43,7 @@ from matplotlib import pyplot as plt
 class Configuration:
     model_file_name = 'checkpoint.pt'
     load_model_to_train = False
-    load_model_to_test = False
+    load_model_to_test = True
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 100
 
@@ -401,7 +401,7 @@ if not config.load_model_to_test:
             #*** Print stats after every point_batches ***
             if idx%config.point_batches==0: 
                 loop_end = time.time()   
-                print('Batch:',idx, '| Processing time for',config.point_batches,':',loop_end-loop_start,                     's | Batch Loss:', batch_loss/config.point_batches)
+                print('Batch:',idx, '| Processing time for',config.point_batches,':',loop_end-loop_start,'s | Batch Loss:', batch_loss/config.point_batches)
                 loop_start = time.time()
                 batch_loss = 0.0
 
@@ -438,7 +438,7 @@ if not config.load_model_to_test:
         print('Validation Loss:', val_loss,'| Processed in ',time.time()-loop_start,'s')
 
         #*** Save the Model to disk ***
-        checkpoint = {'model': model,'model_state_dict': model.state_dict(),                      'optimizer' : optimizer,'optimizer_state_dict' : optimizer.state_dict(),                      'train_loss':train_loss, 'val_loss':val_loss}
+        checkpoint = {'model': model,'model_state_dict': model.state_dict(), 'optimizer' : optimizer,'optimizer_state_dict' : optimizer.state_dict(),                      'train_loss':train_loss, 'val_loss':val_loss}
         torch.save(checkpoint, config.model_file_name)
         print("Model saved at:",os.getcwd(),'/',config.model_file_name)
 
@@ -449,7 +449,7 @@ if not config.load_model_to_test:
 
 
 test_dataset = CustomDataset('data/test','test')
-test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
+test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=hparams.batch_size, shuffle=False, num_workers=hparams.num_workers)
 print('Test: ',len(test_dataloader), '| Total Image:',len(test_dataloader))
 
 
@@ -468,9 +468,6 @@ def concatente_and_colorize(im_lab, img_ab):
     np_img = cv2.cvtColor(lab,cv2.COLOR_Lab2RGB) 
     color_im = torch.stack([torchvision.transforms.ToTensor()(np_img)],dim=0)
     return color_im
-
-
-
 
 
 # In[ ]:
@@ -494,8 +491,6 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         
         #*** Forward Propagation ***
         img_embs = inception_model(img_l_inception.float())
-        print(torch.min(img_l_encoder),torch.max(img_l_encoder))
-        print(torch.min(img_embs),torch.max(img_embs))
         output_ab = model(img_l_encoder,img_embs)
         
         #*** Adding l channel to ab channels ***
@@ -507,9 +502,8 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         plt.imsave('outputs/'+file_name[0],color_img_jpg)
         
         
-      
 #         #*** Printing to Tensor Board ***
-        grid = torchvision.utils.make_grid(img_lab)
+        grid = torchvision.utils.make_grid(color_img_jpg)
         writer.add_image('Output Lab Images', grid, 0)
         
         #*** Loss Calculation ***
