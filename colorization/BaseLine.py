@@ -449,7 +449,7 @@ if not config.load_model_to_test:
 
 
 test_dataset = CustomDataset('data/test','test')
-test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=hparams.batch_size, shuffle=False, num_workers=hparams.num_workers)
+test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=hparams.num_workers)
 print('Test: ',len(test_dataloader), '| Total Image:',len(test_dataloader))
 
 
@@ -503,7 +503,7 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         
         
 #         #*** Printing to Tensor Board ***
-        grid = torchvision.utils.make_grid(color_img_jpg)
+        grid = torchvision.utils.make_grid(color_img)
         writer.add_image('Output Lab Images', grid, 0)
         
         #*** Loss Calculation ***
