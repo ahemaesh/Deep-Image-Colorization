@@ -1,26 +1,13 @@
 
 # coding: utf-8
 
-# # Deep Colorization
-# ### Deep learning final project for conversion of gray scale images to rgb
-# ### Contributors: Bhumi Bhanushali, Avinash Hemaeshwara Raju, Kathan Nilesh Mehta, Atulya Ravishankar
-
-# ### Download Dataset
-
-# In[1]:
-
-
-# wget -N images.cocodataset.org/zips/train2017.zip
-# wget -N images.cocodataset.org/zips/val2017.zip
-# wget -N images.cocodataset.org/zips/test2017.zip
-# pip3 install tensorboard
-# tensorboard --logdir=runs
-
+'''
+Deep Colorization
+Deep learning final project for conversion of gray scale images to rgb
+Contributors: Bhumi Bhanushali, Avinash Hemaeshwara Raju, Kathan Nilesh Mehta, Atulya Ravishankar
+'''
 
 # ### Import Modules
-
-# In[2]:
-
 
 import os
 import time
@@ -36,31 +23,22 @@ import cv2
 
 # ### Configuration
 
-# In[3]:
-
-
 class Configuration:
     model_file_name = 'checkpoint.pt'
     load_model_to_train = False
     load_model_to_test = False
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    point_batches = 100
+    point_batches = 500
 
 
 # ### Hyper Parameters
 
-# In[6]:
-
-
 class HyperParameters:
-    epochs = 1
+    epochs = 15
     batch_size = 32
     learning_rate = 0.001
     num_workers = 16
     learning_rate_decay = 0.5
-
-
-# In[7]:
 
 
 config = Configuration()
@@ -70,9 +48,6 @@ print('Device:',config.device)
 
 # ### Custom Dataloader
 
-# In[8]:
-
-
 class CustomDataset(Dataset):
     def __init__(self, root_dir, process_type):
         self.root_dir = root_dir
@@ -81,7 +56,7 @@ class CustomDataset(Dataset):
         print('File[0]:',self.files[0],'| Total Files:', len(self.files), '| Process:',self.process_type,)
 
     def __len__(self):
-        return 1024#len(self.files)
+        return 32#len(self.files)
 
     def __getitem__(self, index):
         try:
@@ -179,25 +154,8 @@ class CustomDataset(Dataset):
         cv2.destroyAllWindows()
 
 
-# # In[9]:
-
-
-# train_dataset = CustomDataset('data/train','train')
-
-
-# # In[10]:
-
-
-# train_dataset.show_rgb(0)
-# train_dataset.show_lab_encoder(0)
-# train_dataset.show_lab_inception(0)
-# train_dataset.show_other_images(0)
-
 
 # ### Encoder
-
-# In[16]:
-
 
 class Encoder(nn.Module):
     def __init__(self):
@@ -236,8 +194,6 @@ class Encoder(nn.Module):
 
 # ### Fusion Layer
 
-# In[17]:
-
 
 class FusionLayer(nn.Module):
     def __init__(self):
@@ -252,9 +208,6 @@ class FusionLayer(nn.Module):
 
 
 # ### Decoder
-
-# In[18]:
-
 
 class Decoder(nn.Module):
     def __init__(self, input_depth):
@@ -285,9 +238,6 @@ class Decoder(nn.Module):
 
 # ### Network Definition
 
-# In[19]:
-
-
 class Colorization(nn.Module):
     def __init__(self, depth_after_fusion):
         super(Colorization,self).__init__()
@@ -310,8 +260,6 @@ def init_weights(m):
 
 
 # ### Architecture Pipeline
-
-# In[22]:
 
 
 if config.load_model_to_train or config.load_model_to_test:
@@ -336,16 +284,7 @@ scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestone
 writer = SummaryWriter()
 
 
-# In[23]:
-
-
-print(model)
-
-
 # ### Data Loaders
-
-# In[24]:
-
 
 if not config.load_model_to_test:
     train_dataset = CustomDataset('data/train','train')
@@ -360,9 +299,6 @@ if not config.load_model_to_test:
 
 
 # ### Training & Validation Pipeline
-
-# In[25]:
-
 
 if not config.load_model_to_test:
     for epoch in range(hparams.epochs):
@@ -447,7 +383,7 @@ if not config.load_model_to_test:
 
         #*** Save the Model to disk ***
         checkpoint = {'model': model,'model_state_dict': model.state_dict(), 'optimizer' : optimizer,'optimizer_state_dict' : optimizer.state_dict(),                      'train_loss':train_loss, 'val_loss':val_loss}
-        torch.save(checkpoint, config.model_file_name)
+        torch.save(checkpoint, config.model_file_name+str(idx))
         print("Model saved at:",os.getcwd(),'/',config.model_file_name)
 
 
@@ -473,12 +409,12 @@ def concatente_and_colorize(im_lab, img_ab):
     return color_im
 
 
-# In[ ]:
-
-
 #*** Inference Step ***
 avg_loss = 0.0
 loop_start = time.time()
+batch_start = time.time()
+batch_loss = 0.0
+
 for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in enumerate(test_dataloader):
         #*** Skip bad data ***
         if not img_l_encoder.ndim:
@@ -498,14 +434,12 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         
         #*** Adding l channel to ab channels ***
         color_img = concatente_and_colorize(torch.stack([img_l_encoder[:,0,:,:]],dim=1),output_ab)
-        #img_lab = concatente_and_colorize(torch.stack([img_l_encoder[:,0,:,:]],dim=1),output_ab)
         color_img_jpg = color_img[0].detach().numpy().transpose(1,2,0)
         # cv2.imshow(color_img_jpg)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
         cv2.imwrite('outputs/'+file_name[0],color_img_jpg*255)
-        
-        
+
 #       #*** Printing to Tensor Board ***
         grid = torchvision.utils.make_grid(color_img)
         writer.add_image('Output Lab Images', grid, 0)
@@ -513,14 +447,16 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         #*** Loss Calculation ***
         loss = loss_criterion(output_ab, img_ab_encoder.float())
         avg_loss += loss.item()
+        batch_loss += loss.item()
+
+        if idx%config.point_batches==0: 
+            batch_end = time.time()   
+            print('Batch:',idx, '| Processing time for',config.point_batches,':',batch_end-batch_start,'s | Batch Loss:', batch_loss/config.point_batches)
+            batch_start = time.time()
+            batch_loss = 0.0
         
 test_loss = avg_loss/len(test_dataloader)
 writer.add_scalar('Loss/test', test_loss, epoch)
 print('Test Loss:',avg_loss/len(test_dataloader),'| Processed in ',time.time()-loop_start,'s')
-
-
-# In[ ]:
-
-
 writer.close()
 
