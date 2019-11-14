@@ -350,14 +350,14 @@ if not config.load_model_to_test:
             #*** Print stats after every point_batches ***
             if idx%config.point_batches==0: 
                 loop_end = time.time()   
-                print('Batch:',idx, '| Processing time for',config.point_batches,':',loop_end-loop_start+'s',' | Batch Loss:', batch_loss/config.point_batches)
+                print('Batch:',idx, '| Processing time for',config.point_batches,':',str(loop_end-loop_start)+'s',' | Batch Loss:', batch_loss/config.point_batches)
                 loop_start = time.time()
                 batch_loss = 0.0
 
         #*** Print Training Data Stats ***
         train_loss = avg_loss/len(train_dataloader)*hparams.batch_size
         writer.add_scalar('Loss/train', train_loss, epoch)
-        print('Training Loss:',train_loss,'| Processed in ',time.time()-main_start+'s')
+        print('Training Loss:',train_loss,'| Processed in ',str(time.time()-main_start)+'s')
 
         #*** Validation Step ***       
         avg_loss = 0.0
@@ -384,7 +384,7 @@ if not config.load_model_to_test:
 
         val_loss = avg_loss/len(validation_dataloader)*hparams.batch_size
         writer.add_scalar('Loss/validation', val_loss, epoch)
-        print('Validation Loss:', val_loss,'| Processed in ',time.time()-loop_start+'s')
+        print('Validation Loss:', val_loss,'| Processed in ',str(time.time()-loop_start)+'s')
 
         #*** Save the Model to disk ***
         checkpoint = {'model': model,'model_state_dict': model.state_dict(), 'optimizer' : optimizer,'optimizer_state_dict' : optimizer.state_dict(),                      'train_loss':train_loss, 'val_loss':val_loss}
@@ -456,12 +456,12 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
 
         if idx%config.point_batches==0: 
             batch_end = time.time()   
-            print('Batch:',idx, '| Processing time for',config.point_batches,':',batch_end-batch_start,'s | Batch Loss:', batch_loss/config.point_batches)
+            print('Batch:',idx, '| Processing time for',config.point_batches,':',str(batch_end-batch_start)+'s', '| Batch Loss:', batch_loss/config.point_batches)
             batch_start = time.time()
             batch_loss = 0.0
         
 test_loss = avg_loss/len(test_dataloader)
 writer.add_scalar('Loss/test', test_loss, epoch)
-print('Test Loss:',avg_loss/len(test_dataloader),'| Processed in ',time.time()-loop_start+'s')
+print('Test Loss:',avg_loss/len(test_dataloader),'| Processed in ',str(time.time()-loop_start)+'s')
 writer.close()
 
