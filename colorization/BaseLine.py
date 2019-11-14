@@ -445,7 +445,8 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         # cv2.imshow(color_img_jpg)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
-        cv2.imwrite('outputs/'+file_name[0],color_img_jpg*255)
+        # cv2.imwrite('outputs/'+file_name[0],color_img_jpg*255)
+        save_image(color_img[0],'outputs/'+file_name[0])
 
 #       #*** Printing to Tensor Board ***
         grid = torchvision.utils.make_grid(color_img)
