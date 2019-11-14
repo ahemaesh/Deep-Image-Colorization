@@ -171,19 +171,19 @@ class CustomDataset(Dataset):
         plt.show()
 
 
-# In[9]:
+# # In[9]:
 
 
-train_dataset = CustomDataset('data/train','train')
+# train_dataset = CustomDataset('data/train','train')
 
 
-# In[10]:
+# # In[10]:
 
 
-train_dataset.show_rgb(0)
-train_dataset.show_lab_encoder(0)
-train_dataset.show_lab_inception(0)
-train_dataset.show_other_images(0)
+# train_dataset.show_rgb(0)
+# train_dataset.show_lab_encoder(0)
+# train_dataset.show_lab_inception(0)
+# train_dataset.show_other_images(0)
 
 
 # ### Encoder
@@ -470,32 +470,7 @@ def concatente_and_colorize(im_lab, img_ab):
     return color_im
 
 
-# In[ ]:
 
-
-def make_color(l_img, ab_img):
-    np_img = l_img[0].detach().numpy().transpose(1,2,0)
-    plt.imshow(np_img[:,:,0])
-    ab_img = ab_img[0].detach().numpy().transpose(1,2,0)
-    print(np.min(ab_img[:,:,0]), np.max(ab_img[:,:,0]))
-    plt.imshow(ab_img[:,:,0])
-    print(np.min(ab_img[:,:,1]), np.max(ab_img[:,:,1]))
-    plt.imshow(ab_img[:,:,1])
-    print(np_img.shape,ab_img.shape)
-    np_img = np.concatenate((np_img,ab_img),axis=2)
-    color_np_img = cv2.cvtColor(np_img,cv2.COLOR_Lab2RGB) 
-    return color_np_img
-
-
-# In[ ]:
-
-
-def colorize(im_lab):
-    # Assumption is that im_lab is of size [1,3,224,224]
-    np_img = im_lab[0].detach().numpy().transpose(1,2,0)
-    np_img = color.lab2rgb(np_img)
-    color_im = torch.stack([torchvision.transforms.ToTensor()(np_img)],dim=0)
-    return color_im
 
 
 # In[ ]:
@@ -527,8 +502,8 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         color_img = concatente_and_colorize(torch.stack([img_l_encoder[:,0,:,:]],dim=1),output_ab)
         #img_lab = concatente_and_colorize(torch.stack([img_l_encoder[:,0,:,:]],dim=1),output_ab)
         color_img_jpg = color_img[0].detach().numpy().transpose(1,2,0)
-        plt.imshow(color_img_jpg)
-        plt.show()
+        # plt.imshow(color_img_jpg)
+        # plt.show()
         plt.imsave('outputs/'+file_name[0],color_img_jpg)
         
         
