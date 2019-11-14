@@ -56,7 +56,7 @@ class CustomDataset(Dataset):
         print('File[0]:',self.files[0],'| Total Files:', len(self.files), '| Process:',self.process_type,)
 
     def __len__(self):
-        return 32#len(self.files)
+        return len(self.files)
 
     def __getitem__(self, index):
         try:
