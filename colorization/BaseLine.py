@@ -31,8 +31,9 @@ import torchvision
 import torchvision.models as models
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import Dataset, DataLoader
-import cv2
 from matplotlib import pyplot as plt
+from skimage import io, color
+from skimage.transform import resize
 
 
 # ### Configuration
@@ -82,46 +83,46 @@ class CustomDataset(Dataset):
         print('File[0]:',self.files[0],'| Total Files:', len(self.files), '| Process:',self.process_type,)
 
     def __len__(self):
-        return len(self.files)
+        return 1024#len(self.files)
 
     def __getitem__(self, index):
         try:
             #*** Read the image from file ***
-            self.rgb_img = cv2.imread(os.path.join(self.root_dir,self.files[index])) 
+            self.rgb_img = io.imread(os.path.join(self.root_dir,self.files[index]),plugin='matplotlib') 
             
             #*** Resize the color image to pass to encoder ***
-            rgb_encoder_img = cv2.resize(self.rgb_img, (224, 224))
+            rgb_encoder_img = resize(self.rgb_img, (224, 224))
             
             #*** Resize the color image to pass to decoder ***
-            rgb_inception_img = cv2.resize(self.rgb_img, (300, 300))
+            rgb_inception_img = resize(self.rgb_img, (300, 300))
             
             ''' Encoder Images '''
             #*** Convert the encoder color image to normalized lab space ***
-            self.lab_encoder_img = cv2.cvtColor(rgb_encoder_img,cv2.COLOR_RGB2Lab) 
+            self.lab_encoder_img = color.rgb2lab(rgb_encoder_img) 
             
             #*** Splitting the lab images into l-channel, a-channel, b-channel ***
-            l_encoder_img, a_encoder_img, b_encoder_img = cv2.split(self.lab_encoder_img)
+            l_encoder_img, a_encoder_img, b_encoder_img = self.lab_encoder_img[:,:,0],self.lab_encoder_img[:,:,1],self.lab_encoder_img[:,:,2]
             
             #*** Normalizing l-channel between [-1,1] ***
-            l_encoder_img = (2*l_encoder_img/100)-1
+            l_encoder_img = (2*l_encoder_img/100.0)-1.0
             
             #*** Repeat the l-channel to 3 dimensions ***
             l_encoder_img = torchvision.transforms.ToTensor()(l_encoder_img)
             l_encoder_img = l_encoder_img.expand(3,-1,-1)
             
             #*** Normalize a and b channels and concatenate ***
-            a_encoder_img = (a_encoder_img/127)
-            b_encoder_img = (b_encoder_img/127)
+            a_encoder_img = (a_encoder_img/128.0)
+            b_encoder_img = (b_encoder_img/128.0)
             a_encoder_img = torch.stack([torch.Tensor(a_encoder_img)])
             b_encoder_img = torch.stack([torch.Tensor(b_encoder_img)])
             ab_encoder_img = torch.cat([a_encoder_img, b_encoder_img], dim=0)
             
             ''' Inception Images '''
             #*** Convert the inception color image to lab space ***
-            self.lab_inception_img = cv2.cvtColor(rgb_inception_img,cv2.COLOR_RGB2Lab)
+            self.lab_inception_img = color.rgb2lab(rgb_inception_img)
             
             #*** Extract the l-channel of inception lab image *** 
-            l_inception_img,_,_ = cv2.split(self.lab_inception_img)
+            l_inception_img = self.lab_inception_img[:,:,0]
             
             #*** Convert the inception l-image to torch Tensor and stack it in 3 channels ***
             l_inception_img = torchvision.transforms.ToTensor()(l_inception_img)
@@ -159,9 +160,9 @@ class CustomDataset(Dataset):
         plt.imshow((a.detach().numpy().transpose(1,2,0)))#+1)*50)
         plt.show()
         print("Encoder ab channel image size:",b.shape)
-        plt.imshow((b.detach().numpy().transpose(1,2,0)[:,:,0])*127)
+        plt.imshow((b.detach().numpy().transpose(1,2,0)[:,:,0])*128)
         plt.show()
-        plt.imshow((b.detach().numpy().transpose(1,2,0)[:,:,1])*127)
+        plt.imshow((b.detach().numpy().transpose(1,2,0)[:,:,1])*128)
         plt.show()
         print("Inception l channel image size:",c.shape)
         plt.imshow(c.detach().numpy().transpose(1,2,0))
@@ -464,8 +465,8 @@ def concatente_and_colorize(im_lab, img_ab):
     np_img = im_lab[0].cpu().detach().numpy().transpose(1,2,0)
     lab = np.empty([*np_img.shape[0:2], 3],dtype=np.float32)
     lab[:, :, 0] = np.squeeze(((np_img + 1) * 50))
-    lab[:, :, 1:] = img_ab[0].cpu().detach().numpy().transpose(1,2,0) * 127
-    np_img = cv2.cvtColor(lab,cv2.COLOR_Lab2RGB) 
+    lab[:, :, 1:] = img_ab[0].cpu().detach().numpy().transpose(1,2,0) * 128
+    np_img = color.rgb2lab(lab) 
     color_im = torch.stack([torchvision.transforms.ToTensor()(np_img)],dim=0)
     return color_im
 
