@@ -63,7 +63,8 @@ class CustomDataset(Dataset):
             #*** Read the image from file ***
             self.rgb_img = cv2.imread(os.path.join(self.root_dir,self.files[index]))
             
-            if self.rgb_img==None:
+            print(self.rgb_img.dtype)
+            if self.rgb_img.dtype==NoneType:
                 raise Exception
 
             self.rgb_img = self.rgb_img.astype(np.float32) 
