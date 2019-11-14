@@ -31,9 +31,7 @@ import torchvision
 import torchvision.models as models
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import Dataset, DataLoader
-from matplotlib import pyplot as plt
-from skimage import io, color
-from skimage.transform import resize
+import cv2
 
 
 # ### Configuration
@@ -44,7 +42,7 @@ from skimage.transform import resize
 class Configuration:
     model_file_name = 'checkpoint.pt'
     load_model_to_train = False
-    load_model_to_test = False
+    load_model_to_test = True
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 100
 
@@ -83,28 +81,29 @@ class CustomDataset(Dataset):
         print('File[0]:',self.files[0],'| Total Files:', len(self.files), '| Process:',self.process_type,)
 
     def __len__(self):
-        return 1024#len(self.files)
+        return len(self.files)
 
     def __getitem__(self, index):
         try:
             #*** Read the image from file ***
-            self.rgb_img = io.imread(os.path.join(self.root_dir,self.files[index]),plugin='matplotlib') 
+            self.rgb_img = cv2.imread(os.path.join(self.root_dir,self.files[index])).astype(np.float32) 
+            self.rgb_img /= 255.0 
             
             #*** Resize the color image to pass to encoder ***
-            rgb_encoder_img = resize(self.rgb_img, (224, 224), mode='constant')
+            rgb_encoder_img = cv2.resize(self.rgb_img, (224, 224))
             
             #*** Resize the color image to pass to decoder ***
-            rgb_inception_img = resize(self.rgb_img, (300, 300), mode='constant')
+            rgb_inception_img = cv2.resize(self.rgb_img, (300, 300))
             
             ''' Encoder Images '''
             #*** Convert the encoder color image to normalized lab space ***
-            self.lab_encoder_img = color.rgb2lab(rgb_encoder_img) 
+            self.lab_encoder_img = cv2.cvtColor(rgb_encoder_img,cv2.COLOR_BGR2Lab) 
             
             #*** Splitting the lab images into l-channel, a-channel, b-channel ***
             l_encoder_img, a_encoder_img, b_encoder_img = self.lab_encoder_img[:,:,0],self.lab_encoder_img[:,:,1],self.lab_encoder_img[:,:,2]
             
             #*** Normalizing l-channel between [-1,1] ***
-            l_encoder_img = (2*l_encoder_img/100.0)-1.0
+            l_encoder_img = l_encoder_img/50.0 - 1.0
             
             #*** Repeat the l-channel to 3 dimensions ***
             l_encoder_img = torchvision.transforms.ToTensor()(l_encoder_img)
@@ -119,57 +118,65 @@ class CustomDataset(Dataset):
             
             ''' Inception Images '''
             #*** Convert the inception color image to lab space ***
-            self.lab_inception_img = color.rgb2lab(rgb_inception_img)
+            self.lab_inception_img = cv2.cvtColor(rgb_inception_img,cv2.COLOR_BGR2Lab)
             
             #*** Extract the l-channel of inception lab image *** 
-            l_inception_img = self.lab_inception_img[:,:,0]
-            
+            l_inception_img = self.lab_inception_img[:,:,0]/50.0 - 1.0
+             
             #*** Convert the inception l-image to torch Tensor and stack it in 3 channels ***
             l_inception_img = torchvision.transforms.ToTensor()(l_inception_img)
             l_inception_img = l_inception_img.expand(3,-1,-1)
             
             ''' return images to data-loader '''
             rgb_encoder_img = torchvision.transforms.ToTensor()(rgb_encoder_img)
-            return l_encoder_img.float(), ab_encoder_img.float(), l_inception_img.float(), rgb_encoder_img.float(), self.files[index]
+            return l_encoder_img, ab_encoder_img, l_inception_img, rgb_encoder_img, self.files[index]
         
         except Exception as e:
             print('Exception at ',self.files[index], e)
-            return torch.tensor(-1).float(), torch.tensor(-1).float(), torch.tensor(-1).float(), torch.tensor(-1).float(), 'Error'
+            return torch.tensor(-1), torch.tensor(-1), torch.tensor(-1), torch.tensor(-1), 'Error'
 
     def show_rgb(self, index):
         self.__getitem__(index)
         print("RGB image size:", self.rgb_img.shape)        
-        plt.imshow(self.rgb_img)
-        plt.show()
+        cv2.imshow(self.rgb_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     def show_lab_encoder(self, index):
         self.__getitem__(index)
         print("Encoder Lab image size:", self.lab_encoder_img.shape)
-        plt.imshow(self.lab_encoder_img)
-        plt.show()
+        cv2.imshow(self.lab_encoder_img)
+        c2.waitKey(0)
+        cv2.destroyAllWindows()
 
     def show_lab_inception(self, index):
         self.__getitem__(index)
         print("Inception Lab image size:", self.lab_inception_img.shape)
-        plt.imshow(self.lab_inception_img)
-        plt.show()
+        cv2.imshow(self.lab_inception_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     
     def show_other_images(self, index):
         a,b,c,d,_ = self.__getitem__(index)
         print("Encoder l channel image size:",a.shape)
-        plt.imshow((a.detach().numpy().transpose(1,2,0)))#+1)*50)
-        plt.show()
+        cv2.imshow((a.detach().numpy().transpose(1,2,0)))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         print("Encoder ab channel image size:",b.shape)
-        plt.imshow((b.detach().numpy().transpose(1,2,0)[:,:,0])*128)
-        plt.show()
-        plt.imshow((b.detach().numpy().transpose(1,2,0)[:,:,1])*128)
-        plt.show()
+        cv2.imshow((b.detach().numpy().transpose(1,2,0)[:,:,0]))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        cv2.imshow((b.detach().numpy().transpose(1,2,0)[:,:,1]))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         print("Inception l channel image size:",c.shape)
-        plt.imshow(c.detach().numpy().transpose(1,2,0))
-        plt.show()
+        cv2.imshow(c.detach().numpy().transpose(1,2,0))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         print("Color resized image size:",d.shape)
-        plt.imshow(d.detach().numpy().transpose(1,2,0))
-        plt.show()
+        cv2.imshow(d.detach().numpy().transpose(1,2,0))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
 # # In[9]:
@@ -446,17 +453,12 @@ if not config.load_model_to_test:
 
 # ### Inference
 
-# In[ ]:
-
-
 test_dataset = CustomDataset('data/test','test')
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=hparams.num_workers)
 print('Test: ',len(test_dataloader), '| Total Image:',len(test_dataloader))
 
 
 # ##### Convert Tensor Image -> Numpy Image -> Color  Image -> Tensor Image
-
-# In[ ]:
 
 
 def concatente_and_colorize(im_lab, img_ab):
@@ -465,8 +467,8 @@ def concatente_and_colorize(im_lab, img_ab):
     np_img = im_lab[0].cpu().detach().numpy().transpose(1,2,0)
     lab = np.empty([*np_img.shape[0:2], 3],dtype=np.float32)
     lab[:, :, 0] = np.squeeze(((np_img + 1) * 50))
-    lab[:, :, 1:] = img_ab[0].cpu().detach().numpy().transpose(1,2,0) * 128
-    np_img = color.rgb2lab(lab) 
+    lab[:, :, 1:] = img_ab[0].cpu().detach().numpy().transpose(1,2,0) * 127
+    np_img = cv2.cvtColor(lab,cv2.COLOR_Lab2RGB) 
     color_im = torch.stack([torchvision.transforms.ToTensor()(np_img)],dim=0)
     return color_im
 
@@ -498,12 +500,13 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         color_img = concatente_and_colorize(torch.stack([img_l_encoder[:,0,:,:]],dim=1),output_ab)
         #img_lab = concatente_and_colorize(torch.stack([img_l_encoder[:,0,:,:]],dim=1),output_ab)
         color_img_jpg = color_img[0].detach().numpy().transpose(1,2,0)
-        # plt.imshow(color_img_jpg)
-        # plt.show()
-        plt.imsave('outputs/'+file_name[0],color_img_jpg)
+        # cv2.imshow(color_img_jpg)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        cv2.imwrite('outputs/'+file_name[0],color_img_jpg*255)
         
         
-#         #*** Printing to Tensor Board ***
+#       #*** Printing to Tensor Board ***
         grid = torchvision.utils.make_grid(color_img)
         writer.add_image('Output Lab Images', grid, 0)
         
