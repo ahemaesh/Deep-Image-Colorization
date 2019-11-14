@@ -16,6 +16,7 @@ import torch
 import torch.nn as nn
 import torchvision
 import torchvision.models as models
+from torchvision.utils import save_image
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import Dataset, DataLoader
 import cv2
@@ -393,7 +394,6 @@ if not config.load_model_to_test:
         torch.save(checkpoint, config.model_file_name+'.'+str(epoch+1))
         print("Model saved at:",os.getcwd()+'/'+str(config.model_file_name)+'.'+str(epoch+1))
 
-
 # ### Inference
 
 test_dataset = CustomDataset('data/test','test')
@@ -463,7 +463,6 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
             batch_loss = 0.0
         
 test_loss = avg_loss/len(test_dataloader)
-writer.add_scalar('Loss/test', test_loss, epoch)
 print('Test Loss:',avg_loss/len(test_dataloader),'| Processed in ',str(time.time()-loop_start)+'s')
-writer.close()
+writer.close() 
 
