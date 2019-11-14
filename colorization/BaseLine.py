@@ -134,7 +134,7 @@ class CustomDataset(Dataset):
         
         except Exception as e:
             print('Exception at ',self.files[index], e)
-            return torch.tensor(-1), torch.tensor(-1), torch.tensor(-1), torch.tensor(-1), 'Error'
+            return torch.tensor(-1).float(), torch.tensor(-1).float(), torch.tensor(-1).float(), torch.tensor(-1).float(), 'Error'
 
     def show_rgb(self, index):
         self.__getitem__(index)
