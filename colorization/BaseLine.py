@@ -130,7 +130,7 @@ class CustomDataset(Dataset):
             
             ''' return images to data-loader '''
             rgb_encoder_img = torchvision.transforms.ToTensor()(rgb_encoder_img)
-            return l_encoder_img, ab_encoder_img, l_inception_img, rgb_encoder_img, self.files[index]
+            return l_encoder_img.float(), ab_encoder_img.float(), l_inception_img.float(), rgb_encoder_img.float(), self.files[index]
         
         except Exception as e:
             print('Exception at ',self.files[index], e)
