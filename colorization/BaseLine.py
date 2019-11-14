@@ -350,7 +350,7 @@ if not config.load_model_to_test:
             #*** Print stats after every point_batches ***
             if idx%config.point_batches==0: 
                 loop_end = time.time()   
-                print('Batch:',idx, '| Processing time for',config.point_batches,':',loop_end-loop_start,'s | Batch Loss:', batch_loss/config.point_batches)
+                print('Batch:',idx, '| Processing time for',config.point_batches,':',loop_end-loop_start+'s',' | Batch Loss:', batch_loss/config.point_batches)
                 loop_start = time.time()
                 batch_loss = 0.0
 
