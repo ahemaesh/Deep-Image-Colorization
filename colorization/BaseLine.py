@@ -27,7 +27,7 @@ import cv2
 class Configuration:
     model_file_name = 'pretrained_models/checkpoint'
     load_model_to_train = False
-    load_model_to_test = True
+    load_model_to_test = False
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 500
 
@@ -35,9 +35,9 @@ class Configuration:
 # ### Hyper Parameters
 
 class HyperParameters:
-    epochs = 15
+    epochs = 3
     batch_size = 32
-    learning_rate = 0.0001
+    learning_rate = 0.001
     num_workers = 16
     learning_rate_decay = 0.1
 
