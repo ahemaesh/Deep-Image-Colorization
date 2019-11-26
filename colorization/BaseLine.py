@@ -75,7 +75,7 @@ class CustomDataset(Dataset):
             rgb_encoder_img = cv2.resize(self.rgb_img, (224, 224))
             
             #*** Resize the color image to pass to decoder ***
-            rgb_inception_img = cv2.resize(self.rgb_img, (300, 300))
+            rgb_resnet_img = cv2.resize(self.rgb_img, (300, 300))
             
             ''' Encoder Images '''
             #*** Convert the encoder color image to normalized lab space ***
@@ -99,19 +99,19 @@ class CustomDataset(Dataset):
             ab_encoder_img = torch.cat([a_encoder_img, b_encoder_img], dim=0)
             
             ''' Inception Images '''
-            #*** Convert the inception color image to lab space ***
-            self.lab_inception_img = cv2.cvtColor(rgb_inception_img,cv2.COLOR_BGR2Lab)
+            #*** Convert the resnet color image to lab space ***
+            self.lab_resnet_img = cv2.cvtColor(rgb_resnet_img,cv2.COLOR_BGR2Lab)
             
-            #*** Extract the l-channel of inception lab image *** 
-            l_inception_img = self.lab_inception_img[:,:,0]/50.0 - 1.0
+            #*** Extract the l-channel of resnet lab image *** 
+            l_resnet_img = self.lab_resnet_img[:,:,0]/50.0 - 1.0
              
-            #*** Convert the inception l-image to torch Tensor and stack it in 3 channels ***
-            l_inception_img = torchvision.transforms.ToTensor()(l_inception_img)
-            l_inception_img = l_inception_img.expand(3,-1,-1)
+            #*** Convert the resnet l-image to torch Tensor and stack it in 3 channels ***
+            l_resnet_img = torchvision.transforms.ToTensor()(l_resnet_img)
+            l_resnet_img = l_resnet_img.expand(3,-1,-1)
             
             ''' return images to data-loader '''
             rgb_encoder_img = torchvision.transforms.ToTensor()(rgb_encoder_img)
-            return l_encoder_img, ab_encoder_img, l_inception_img, rgb_encoder_img, self.files[index]
+            return l_encoder_img, ab_encoder_img, l_resnet_img, rgb_encoder_img, self.files[index]
         
         except Exception as e:
             print('Exception at ',self.files[index], e)
@@ -131,10 +131,10 @@ class CustomDataset(Dataset):
         c2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def show_lab_inception(self, index):
+    def show_lab_resnet(self, index):
         self.__getitem__(index)
-        print("Inception Lab image size:", self.lab_inception_img.shape)
-        cv2.imshow(self.lab_inception_img)
+        print("Inception Lab image size:", self.lab_resnet_img.shape)
+        cv2.imshow(self.lab_resnet_img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     
@@ -282,9 +282,9 @@ else:
     optimizer = torch.optim.Adam(model.parameters(),lr=hparams.learning_rate, weight_decay=1e-6)
 
 pdb.set_trace()
-inception_model = models.resnet50(pretrained=True,progress=True).float().to(config.device)
-inception_model = inception_model.float()
-inception_model.eval()
+resnet_model = models.resnet50(pretrained=True,progress=True).float().to(config.device)
+resnet_model = resnet_model.float()
+resnet_model.eval()
 loss_criterion = torch.nn.MSELoss(reduction='mean').to(config.device)
 milestone_list  = list(range(0,hparams.epochs,2))
 scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestone_list, gamma=hparams.learning_rate_decay)
@@ -318,7 +318,7 @@ if not config.load_model_to_test:
         main_start = time.time()
         model.train()
 
-        for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in enumerate(train_dataloader):
+        for idx,(img_l_encoder, img_ab_encoder, img_l_resnet, img_rgb, file_name) in enumerate(train_dataloader):
             #*** Skip bad data ***
             if not img_l_encoder.ndim:
                 continue
@@ -326,13 +326,13 @@ if not config.load_model_to_test:
             #*** Move data to GPU if available ***
             img_l_encoder = img_l_encoder.to(config.device)
             img_ab_encoder = img_ab_encoder.to(config.device)
-            img_l_inception = img_l_inception.to(config.device)
+            img_l_resnet = img_l_resnet.to(config.device)
 
             #*** Initialize Optimizer ***
             optimizer.zero_grad()
 
             #*** Forward Propagation ***
-            img_embs = inception_model(img_l_inception.float())
+            img_embs = resnet_model(img_l_resnet.float())
             output_ab = model(img_l_encoder,img_embs)
 
             #*** Back propogation ***
@@ -366,7 +366,7 @@ if not config.load_model_to_test:
         loop_start = time.time()
         #*** Intialize Model to Eval Mode for validation ***
         model.eval()
-        for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in enumerate(validation_dataloader):
+        for idx,(img_l_encoder, img_ab_encoder, img_l_resnet, img_rgb, file_name) in enumerate(validation_dataloader):
             #*** Skip bad data ***
             if not img_l_encoder.ndim:
                 continue
@@ -374,10 +374,10 @@ if not config.load_model_to_test:
             #*** Move data to GPU if available ***
             img_l_encoder = img_l_encoder.to(config.device)
             img_ab_encoder = img_ab_encoder.to(config.device)
-            img_l_inception = img_l_inception.to(config.device)
+            img_l_resnet = img_l_resnet.to(config.device)
 
             #*** Forward Propagation ***
-            img_embs = inception_model(img_l_inception.float())
+            img_embs = resnet_model(img_l_resnet.float())
             output_ab = model(img_l_encoder,img_embs)
 
             #*** Loss Calculation ***
@@ -423,7 +423,7 @@ loop_start = time.time()
 batch_start = time.time()
 batch_loss = 0.0
 
-for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in enumerate(test_dataloader):
+for idx,(img_l_encoder, img_ab_encoder, img_l_resnet, img_rgb, file_name) in enumerate(test_dataloader):
         #*** Skip bad data ***
         if not img_l_encoder.ndim:
             continue
@@ -431,13 +431,13 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_inception, img_rgb, file_name) in 
         #*** Move data to GPU if available ***
         img_l_encoder = img_l_encoder.to(config.device)
         img_ab_encoder = img_ab_encoder.to(config.device)
-        img_l_inception = img_l_inception.to(config.device)
+        img_l_resnet = img_l_resnet.to(config.device)
         
         #*** Intialize Model to Eval Mode ***
         model.eval()
         
         #*** Forward Propagation ***
-        img_embs = inception_model(img_l_inception.float())
+        img_embs = resnet_model(img_l_resnet.float())
         output_ab = model(img_l_encoder,img_embs)
         
         #*** Adding l channel to ab channels ***
