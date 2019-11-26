@@ -59,7 +59,7 @@ class CustomDataset(Dataset):
     def __len__(self):
         return len(self.files)
 
-    def __getitem__(self, input_depthex):
+    def __getitem__(self, index):
         try:
             #*** Read the image from file ***
             self.rgb_img = cv2.imread(os.path.join(self.root_dir,self.files[index]))
