@@ -20,7 +20,6 @@ from torchvision.utils import save_image
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import Dataset, DataLoader
 import cv2
-import pdb
 
 
 # ### Configuration
@@ -281,7 +280,6 @@ else:
 #     model.apply(init_weights)
     optimizer = torch.optim.Adam(model.parameters(),lr=hparams.learning_rate, weight_decay=1e-6)
 
-pdb.set_trace()
 resnet_model = models.resnet50(pretrained=True,progress=True).float().to(config.device)
 resnet_model = resnet_model.float()
 resnet_model.eval()
@@ -297,7 +295,6 @@ if not config.load_model_to_test:
     train_dataset = CustomDataset('data/train','train')
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=hparams.batch_size, shuffle=True, num_workers=hparams.num_workers)
     
-
     validataion_dataset = CustomDataset('data/validation','validation')
     validation_dataloader = torch.utils.data.DataLoader(validataion_dataset, batch_size=hparams.batch_size, shuffle=False, num_workers=hparams.num_workers)
     
@@ -308,6 +305,7 @@ if not config.load_model_to_test:
 # ### Training & Validation Pipeline
 
 if not config.load_model_to_test:
+    flag = True
     for epoch in range(hparams.epochs):
         print('Starting epoch:',epoch+1)
 
@@ -335,6 +333,9 @@ if not config.load_model_to_test:
             img_embs = resnet_model(img_l_resnet.float())
             output_ab = model(img_l_encoder,img_embs)
 
+            if flag:
+                print(img_embs.size())
+                flag = False
             #*** Back propogation ***
             loss = loss_criterion(output_ab, img_ab_encoder.float())
             loss.backward()
