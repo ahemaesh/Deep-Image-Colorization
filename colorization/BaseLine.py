@@ -20,6 +20,7 @@ from torchvision.utils import save_image
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import Dataset, DataLoader
 import cv2
+import pdb
 
 
 # ### Configuration
@@ -59,7 +60,7 @@ class CustomDataset(Dataset):
     def __len__(self):
         return len(self.files)
 
-    def __getitem__(self, index):
+    def __getitem__(self, input_depthex):
         try:
             #*** Read the image from file ***
             self.rgb_img = cv2.imread(os.path.join(self.root_dir,self.files[index]))
@@ -200,7 +201,6 @@ class Encoder(nn.Module):
 
 # ### Fusion Layer
 
-
 class FusionLayer(nn.Module):
     def __init__(self):
         super(FusionLayer,self).__init__()
@@ -281,7 +281,8 @@ else:
 #     model.apply(init_weights)
     optimizer = torch.optim.Adam(model.parameters(),lr=hparams.learning_rate, weight_decay=1e-6)
 
-inception_model = models.inception_v3(pretrained=True).float().to(config.device)
+pdb.set_trace()
+inception_model = models.resnet50(pretrained=True,progress=True).float().to(config.device)
 inception_model = inception_model.float()
 inception_model.eval()
 loss_criterion = torch.nn.MSELoss(reduction='mean').to(config.device)
