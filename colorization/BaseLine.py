@@ -35,7 +35,7 @@ class Configuration:
 # ### Hyper Parameters
 
 class HyperParameters:
-    epochs = 3
+    epochs = 20
     batch_size = 32
     learning_rate = 0.001
     num_workers = 16
