@@ -5,7 +5,9 @@ data/
 .DS_Store
 runs/
 .ipynb_checkpoints/
-outputs/
+outputs*
+Outputs*
+Coco*
 
 #Files
 checkpoint*
