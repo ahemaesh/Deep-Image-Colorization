@@ -25,8 +25,8 @@ import cv2
 # ### Configuration
 
 class Configuration:
-    model_file_name = 'pretrained_models/checkpoint'
-    load_model_to_train = False
+    model_file_name = 'pretrained_models/checkpoint.1'
+    load_model_to_train = True
     load_model_to_test = False
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 500
@@ -35,7 +35,7 @@ class Configuration:
 # ### Hyper Parameters
 
 class HyperParameters:
-    epochs = 1
+    epochs = 19
     batch_size = 32
     learning_rate = 0.001
     num_workers = 16
@@ -281,6 +281,10 @@ if config.load_model_to_train or config.load_model_to_test:
     checkpoint = torch.load(config.model_file_name,map_location=torch.device(config.device))
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    for state in optimizer.state.values():
+        for k,v in state.items():
+            if isinstance(v,torch.Tensor):
+                state[k] = v.cuda()
     scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
     print('Loaded pretrain model | Previous train loss:',checkpoint['train_loss'], '| Previous validation loss:',checkpoint['val_loss'])
     print('Loaded Schedule :', scheduler)
