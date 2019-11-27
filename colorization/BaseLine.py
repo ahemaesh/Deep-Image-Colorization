@@ -26,7 +26,7 @@ import cv2
 
 class Configuration:
     model_file_name = 'pretrained_models/checkpoint.1'
-    load_model_to_train = True
+    load_model_to_train = False
     load_model_to_test = False
     device = "cuda" if torch.cuda.is_available() else "cpu"
     point_batches = 500
@@ -35,11 +35,11 @@ class Configuration:
 # ### Hyper Parameters
 
 class HyperParameters:
-    epochs = 19
+    epochs = 20
     batch_size = 32
     learning_rate = 0.001
     num_workers = 16
-    learning_rate_decay = 0.1
+    learning_rate_decay = 0.2
 
 
 config = Configuration()
@@ -271,7 +271,7 @@ resnet_model.eval()
 resnet_model = resnet_model.float()
 
 loss_criterion = torch.nn.MSELoss(reduction='mean').to(config.device)
-milestone_list  = list(range(0,hparams.epochs,2))
+milestone_list  = list(range(0,hparams.epochs,5))
 writer = SummaryWriter()
 model = Colorization(256)
 optimizer = torch.optim.Adam(model.parameters(),lr=hparams.learning_rate, weight_decay=1e-6)
