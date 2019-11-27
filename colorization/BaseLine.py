@@ -35,7 +35,7 @@ class Configuration:
 # ### Hyper Parameters
 
 class HyperParameters:
-    epochs = 20
+    epochs = 1
     batch_size = 32
     learning_rate = 0.001
     num_workers = 16
@@ -266,27 +266,29 @@ def init_weights(m):
 
 # ### Architecture Pipeline
 
+resnet_model = models.resnet50(pretrained=True,progress=True).float().to(config.device)
+resnet_model.eval()
+resnet_model = resnet_model.float()
+
+loss_criterion = torch.nn.MSELoss(reduction='mean').to(config.device)
+milestone_list  = list(range(0,hparams.epochs,2))
+writer = SummaryWriter()
+model = Colorization(256)
+optimizer = torch.optim.Adam(model.parameters(),lr=hparams.learning_rate, weight_decay=1e-6)
+scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestone_list, gamma=hparams.learning_rate_decay)
 
 if config.load_model_to_train or config.load_model_to_test:
     checkpoint = torch.load(config.model_file_name,map_location=torch.device(config.device))
-    model = checkpoint['model']
     model.load_state_dict(checkpoint['model_state_dict'])
-    model = model.to(config.device) 
-    optimizer = checkpoint['optimizer']
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
     print('Loaded pretrain model | Previous train loss:',checkpoint['train_loss'], '| Previous validation loss:',checkpoint['val_loss'])
-else:
-    model = Colorization(256).to(config.device) 
-#     model.apply(init_weights)
-    optimizer = torch.optim.Adam(model.parameters(),lr=hparams.learning_rate, weight_decay=1e-6)
+    print('Loaded Schedule :', scheduler)
+    print('Loaded Optimizer : ', optimizer)
 
-resnet_model = models.resnet50(pretrained=True,progress=True).float().to(config.device)
-resnet_model = resnet_model.float()
-resnet_model.eval()
-loss_criterion = torch.nn.MSELoss(reduction='mean').to(config.device)
-milestone_list  = list(range(0,hparams.epochs,2))
-scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestone_list, gamma=hparams.learning_rate_decay)
-writer = SummaryWriter()
+
+model = model.to(config.device) 
+resnet_model = resnet_model.to(config.device)
 
 
 # ### Data Loaders
@@ -390,8 +392,9 @@ if not config.load_model_to_test:
         print('Validation Loss:', val_loss,'| Processed in ',str(time.time()-loop_start)+'s')
 
         #*** Save the Model to disk ***
-        checkpoint = {'model': model,'model_state_dict': model.state_dict(),\
-                      'optimizer' : optimizer,'optimizer_state_dict' : optimizer.state_dict(), \
+        checkpoint = {'model_state_dict': model.state_dict(),\
+                      'optimizer_state_dict' : optimizer.state_dict(), \
+                      'scheduler_state_dict' : scheduler.state_dict(),\
                       'train_loss':train_loss, 'val_loss':val_loss}
         torch.save(checkpoint, config.model_file_name+'.'+str(epoch+1))
         print("Model saved at:",os.getcwd()+'/'+str(config.model_file_name)+'.'+str(epoch+1))
@@ -404,7 +407,6 @@ print('Test: ',len(test_dataloader), '| Total Image:',len(test_dataloader))
 
 
 # ##### Convert Tensor Image -> Numpy Image -> Color  Image -> Tensor Image
-
 
 def concatente_and_colorize(im_lab, img_ab):
     # Assumption is that im_lab is of size [1,3,224,224]
@@ -468,4 +470,3 @@ for idx,(img_l_encoder, img_ab_encoder, img_l_resnet, img_rgb, file_name) in enu
 test_loss = avg_loss/len(test_dataloader)
 print('Test Loss:',avg_loss/len(test_dataloader),'| Processed in ',str(time.time()-loop_start)+'s')
 writer.close() 
-
