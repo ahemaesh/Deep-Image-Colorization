@@ -8,7 +8,10 @@ runs/
 outputs*
 Outputs*
 Coco*
+<<<<<<< HEAD
 ImageNet*
+=======
+>>>>>>> origin/baseline_model
 
 #Files
 checkpoint*
