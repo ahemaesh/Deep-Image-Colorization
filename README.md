@@ -9,7 +9,7 @@
 
 
 ### Final Results
-[!picture](Final_Results.png)
+![picture](Final_Results.png)
 
 
 ### **Download data from google drive use 'gdown'**
