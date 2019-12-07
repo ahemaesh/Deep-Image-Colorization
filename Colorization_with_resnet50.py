@@ -25,7 +25,7 @@ import cv2
 # ### Configuration
 
 class Configuration:
-    model_file_name = 'pretrained_models/checkpoint.1'
+    model_file_name = 'pretrained_models/checkpoint'
     load_model_to_train = False
     load_model_to_test = False
     device = "cuda" if torch.cuda.is_available() else "cpu"
