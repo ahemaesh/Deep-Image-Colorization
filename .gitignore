@@ -1,1 +1,14 @@
+#Folders
+__pycache__/
+data/
+.vscode/
 .DS_Store
+runs/
+.ipynb_checkpoints/
+outputs*
+Outputs*
+Coco*
+ImageNet*
+
+#Files
+checkpoint*
