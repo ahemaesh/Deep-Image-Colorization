@@ -12,14 +12,9 @@
 ![picture](Final_Results.png)
 
 
-### **Download data from google drive use 'gdown'**
-##### Install 'gdown' using 'pip install gdown'
-##### Get data from the drive using the command line argument gdown https://drive.google.com/u?/id='FileID' , where FileID has to be replaced based on the id in the get shareable link.
-##### Make sure the link to download has public access. Turn off the public access once downloaded
-
 ### **Using Tensorboad on AWS**
-##### pip install tensorboard
-##### run the tensorboard using 'tensorboard --logdir==runs"
-##### Note the pytorch version has to be >=1.2
+> pip install tensorboard <br />
+> run the tensorboard using 'tensorboard --logdir==runs" <br />
+> Note the pytorch version has to be >=1.2 <br />
 
 
