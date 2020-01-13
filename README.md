@@ -7,10 +7,10 @@
 >wget -N images.cocodataset.org/zips/val2017.zip<br />
 >wget -N images.cocodataset.org/zips/test2017.zip<br />
 
+![Final Report](https://github.com/ahemaesh/Deep-Image-Colorization/blob/master/iGan_DL_Project_Final_Report.pdf)
 
 ### Final Results
 ![picture](Final_Results.png)
-
 
 ### **Using Tensorboad on AWS**
 > pip install tensorboard <br />
