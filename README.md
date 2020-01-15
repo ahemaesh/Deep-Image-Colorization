@@ -2,15 +2,16 @@
 #### Our Implementation is derived from the Original Paper 'Deep Koalarization: Image Colorization usingCNNs and Inception-Resnet-v2': https://arxiv.org/pdf/1712.03400.pdf
 #### This approach has been tested on Coco-dataset with 70000 train images, 5000 validation images and 10000 test images
 
-### **The Coco dataset can be downloaded on AWS or Google Colab using the below command line arguments:**
+#### The Coco dataset can be downloaded on AWS or Google Colab using the below command line arguments:
 >wget -N images.cocodataset.org/zips/train2017.zip<br />
 >wget -N images.cocodataset.org/zips/val2017.zip<br />
 >wget -N images.cocodataset.org/zips/test2017.zip<br />
 
+### Final Report
+![Report Link](https://github.com/ahemaesh/Deep-Image-Colorization/raw/master/iGan_DL_Project_Final_Report.pdf)
 
 ### Final Results
 ![picture](Final_Results.png)
-
 
 ### **Using Tensorboad on AWS**
 > pip install tensorboard <br />
